@@ -17,7 +17,7 @@
     let currentSubtasks = [];
     let selectedTasks = new Set();
     let currentList = 'inbox';
-    let focusMode = false;
+    let focusMode = 'all'; // 'all', 'active', 'completed'
     let pomodoroInterval = null;
     let pomodoroTimeLeft = 25 * 60;
     let pomodoroSessions = 0;
@@ -97,6 +97,7 @@
         batchComplete: document.getElementById('batchComplete'),
         batchDelete: document.getElementById('batchDelete'),
         batchArchive: document.getElementById('batchArchive'),
+        clearFocusMode: document.getElementById('clearFocusMode'),
         shareModal: document.getElementById('shareModal'),
         shareClose: document.getElementById('shareClose'),
         shareLinkInput: document.getElementById('shareLinkInput'),
@@ -108,6 +109,7 @@
         renderBoards();
         renderTasks();
         updateStats();
+        updateFocusIndicator();
         setupEventListeners();
         setupKeyboardShortcuts();
         checkReminders();
@@ -187,7 +189,8 @@
         const toDate = elements.dateTo.value;
 
         let filtered = tasks.filter(task => {
-            if (focusMode && task.completed) return false;
+            if (focusMode === 'active' && task.completed) return false;
+            if (focusMode === 'completed' && !task.completed) return false;
             if (currentList !== 'all' && task.list !== currentList) return false;
             if (search && !task.title.toLowerCase().includes(search) && !task.description.toLowerCase().includes(search)) return false;
             if (status === 'active' && task.completed) return false;
@@ -707,10 +710,42 @@
     }
 
     function toggleFocusMode() {
-        focusMode = !focusMode;
-        elements.focusModeBtn.classList.toggle('active', focusMode);
+        if (focusMode === 'all') {
+            focusMode = 'active';
+            elements.focusModeBtn.classList.add('active');
+        } else if (focusMode === 'active') {
+            focusMode = 'completed';
+            elements.focusModeBtn.classList.add('active');
+        } else {
+            focusMode = 'all';
+            elements.focusModeBtn.classList.remove('active');
+        }
+        elements.statusFilter.value = 'all';
+        updateFocusIndicator();
         renderTasks();
-        showToast(focusMode ? 'Focus mode enabled' : 'Focus mode disabled');
+        
+        let modeText = focusMode === 'all' ? 'Showing all tasks' : focusMode === 'active' ? 'Focus mode: Active tasks only' : 'Showing completed tasks only';
+        showToast(modeText);
+    }
+
+    function updateFocusIndicator() {
+        const indicator = document.getElementById('focusIndicator');
+        const text = document.getElementById('focusModeText');
+        
+        if (focusMode === 'all') {
+            indicator.style.display = 'none';
+        } else {
+            indicator.style.display = 'flex';
+            text.textContent = focusMode === 'active' ? '🔍 Focus Mode: Active Tasks' : '✅ Showing Completed Only';
+        }
+    }
+
+    function clearFocusMode() {
+        focusMode = 'all';
+        elements.focusModeBtn.classList.remove('active');
+        elements.statusFilter.value = 'all';
+        updateFocusIndicator();
+        renderTasks();
     }
 
     function showToast(message, showUndo = false) {
@@ -1008,6 +1043,10 @@
 
             if (e.ctrlKey && e.key === 'a') { e.preventDefault(); selectAllVisible(); }
 
+            if (e.key === 'f' || e.key === 'F') {
+                if (!elements.taskModal.classList.contains('active')) { e.preventDefault(); toggleFocusMode(); }
+            }
+
             if (e.key === 'Escape') {
                 if (elements.taskModal.classList.contains('active')) closeModal();
                 else if (elements.statsModal.classList.contains('active')) elements.statsModal.classList.remove('active');
@@ -1098,6 +1137,7 @@
         elements.newListName.addEventListener('keypress', (e) => { if (e.key === 'Enter') addList(e.target.value); });
 
         elements.focusModeBtn.addEventListener('click', toggleFocusMode);
+        elements.clearFocusMode.addEventListener('click', clearFocusMode);
 
         elements.pomodoroBtn.addEventListener('click', () => {
             resetPomodoro();
