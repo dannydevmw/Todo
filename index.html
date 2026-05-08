@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo App</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✓</text></svg>">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="header-top">
+                <div class="title-area">
+                    <h1 class="app-title">Tasks</h1>
+                    <div class="stats-mini" id="statsMini">
+                        <span class="stat-item">
+                            <strong id="activeCount">0</strong> active
+                        </span>
+                        <span class="stat-item">
+                            <strong id="completedCount">0</strong> done
+                        </span>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="icon-btn" id="focusModeBtn" title="Focus Mode">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                    <button class="icon-btn" id="pomodoroBtn" title="Pomodoro Timer">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                        </svg>
+                    </button>
+                    <button class="icon-btn" id="statsBtn" title="Statistics">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 20V10M12 20V4M6 20v-6"/>
+                        </svg>
+                    </button>
+                    <button class="icon-btn" id="archiveBtn" title="Archive">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/>
+                        </svg>
+                    </button>
+                    <button class="icon-btn" id="exportBtn" title="Export/Import">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                        </svg>
+                    </button>
+                    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                        </svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="boards-nav" id="boardsNav"></div>
+
+            <div class="search-container">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                </svg>
+                <input type="text" class="search-input" id="searchInput" placeholder="Search tasks... (Ctrl+K)">
+            </div>
+        </header>
+
+        <div class="toolbar">
+            <div class="filters">
+                <select class="filter-select" id="statusFilter">
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="completed">Completed</option>
+                </select>
+                <select class="filter-select" id="categoryFilter">
+                    <option value="all">All Categories</option>
+                    <option value="work">Work</option>
+                    <option value="personal">Personal</option>
+                    <option value="urgent">Urgent</option>
+                    <option value="other">Other</option>
+                </select>
+                <select class="filter-select" id="tagFilter">
+                    <option value="all">All Tags</option>
+                </select>
+                <select class="filter-select" id="sortFilter">
+                    <option value="order">Sort by Custom</option>
+                    <option value="dueDate">Sort by Due Date</option>
+                    <option value="priority">Sort by Priority</option>
+                    <option value="created">Sort by Created</option>
+                </select>
+                <div class="date-filter">
+                    <input type="date" class="filter-date" id="dateFrom" placeholder="From">
+                    <span class="date-separator">to</span>
+                    <input type="date" class="filter-date" id="dateTo" placeholder="To">
+                </div>
+            </div>
+            <button class="batch-actions-btn" id="batchActionsBtn" style="display: none;">
+                <span id="selectedCount">0 selected</span>
+                <button class="batch-btn" id="batchComplete">Complete</button>
+                <button class="batch-btn" id="batchDelete">Delete</button>
+                <button class="batch-btn" id="batchArchive">Archive</button>
+            </button>
+        </div>
+
+        <div class="task-header-bar">
+            <button class="add-task-btn" id="addTaskBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+                Add Task
+            </button>
+            <div class="shortcuts-hint">
+                <kbd>N</kbd> New <kbd>Esc</kbd> Close <kbd>Ctrl+Z</kbd> Undo <kbd>Ctrl+A</kbd> Select
+            </div>
+        </div>
+
+        <div class="task-list" id="taskList"></div>
+
+        <div class="empty-state" id="emptyState">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+            </svg>
+            <p>No tasks yet</p>
+            <span>Click "Add Task" to create your first task</span>
+        </div>
+    </div>
+
+    <div class="modal" id="taskModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Task</h2>
+                <button class="modal-close" id="modalClose">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <form class="task-form" id="taskForm">
+                <input type="hidden" id="taskId">
+                <div class="form-group">
+                    <label for="taskTitle">Title</label>
+                    <input type="text" id="taskTitle" required placeholder="Task title">
+                </div>
+                <div class="form-group">
+                    <label for="taskDescription">Description</label>
+                    <textarea id="taskDescription" placeholder="Optional description" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="taskListSelect">List</label>
+                    <select id="taskListSelect">
+                        <option value="inbox">Inbox</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="taskCategory">Category</label>
+                        <select id="taskCategory">
+                            <option value="work">Work</option>
+                            <option value="personal">Personal</option>
+                            <option value="urgent">Urgent</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskPriority">Priority</label>
+                        <select id="taskPriority">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="taskTags">Tags</label>
+                    <div class="tags-input-container">
+                        <div class="tags-list" id="selectedTags"></div>
+                        <select id="taskTags" class="tag-select">
+                            <option value="">Add tag...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="taskDueDate">Due Date</label>
+                    <input type="datetime-local" id="taskDueDate">
+                </div>
+                <div class="form-group">
+                    <label for="taskWeekdays">Repeat on Days</label>
+                    <div class="weekdays-selector">
+                        <label class="weekday-label"><input type="checkbox" value="0"><span>Sun</span></label>
+                        <label class="weekday-label"><input type="checkbox" value="1"><span>Mon</span></label>
+                        <label class="weekday-label"><input type="checkbox" value="2"><span>Tue</span></label>
+                        <label class="weekday-label"><input type="checkbox" value="3"><span>Wed</span></label>
+                        <label class="weekday-label"><input type="checkbox" value="4"><span>Thu</span></label>
+                        <label class="weekday-label"><input type="checkbox" value="5"><span>Fri</span></label>
+                        <label class="weekday-label"><input type="checkbox" value="6"><span>Sat</span></label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="taskRecurring">Recurring</label>
+                    <select id="taskRecurring">
+                        <option value="">Not recurring</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="taskReminder">
+                        <span class="checkmark"></span>
+                        Enable reminder notification
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>Subtasks</label>
+                    <div class="subtasks-container" id="subtasksContainer">
+                        <div class="subtask-input-row">
+                            <input type="text" class="subtask-input" placeholder="Add subtask...">
+                            <button type="button" class="subtask-add-btn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 5v14M5 12h14"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <ul class="subtasks-list" id="subtasksList"></ul>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="taskNotes">Notes</label>
+                    <textarea id="taskNotes" placeholder="Additional notes..." rows="3"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" id="cancelBtn">Cancel</button>
+                    <button type="submit" class="btn-save">Save Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="statsModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-wide">
+            <div class="modal-header">
+                <h2>Statistics</h2>
+                <button class="modal-close" id="statsClose">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="stats-content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="statTotal">0</div>
+                        <div class="stat-label">Total Tasks</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statActive">0</div>
+                        <div class="stat-label">Active</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statCompleted">0</div>
+                        <div class="stat-label">Completed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statArchived">0</div>
+                        <div class="stat-label">Archived</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statToday">0</div>
+                        <div class="stat-label">Completed Today</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statWeek">0</div>
+                        <div class="stat-label">This Week</div>
+                    </div>
+                </div>
+                <div class="stats-chart">
+                    <h3>Completion Rate (Last 7 Days)</h3>
+                    <div class="chart-bars" id="chartBars"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="archiveModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Archive</h2>
+                <button class="modal-close" id="archiveClose">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="archive-content">
+                <div class="task-list" id="archiveList"></div>
+                <div class="empty-state" id="archiveEmpty">
+                    <p>No archived tasks</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="exportModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Export / Import / Share</h2>
+                <button class="modal-close" id="exportClose">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="export-content">
+                <div class="export-section">
+                    <h3>Export Data</h3>
+                    <p>Download your tasks as a JSON file</p>
+                    <button class="btn-export" id="exportJsonBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                        </svg>
+                        Export JSON
+                    </button>
+                </div>
+                <div class="export-section">
+                    <h3>Import Data</h3>
+                    <p>Load tasks from a JSON file</p>
+                    <input type="file" id="importFile" accept=".json" hidden>
+                    <button class="btn-export" id="importJsonBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                        </svg>
+                        Import JSON
+                    </button>
+                </div>
+                <div class="export-section">
+                    <h3>Share via Link</h3>
+                    <p>Generate a shareable link for your tasks</p>
+                    <button class="btn-export" id="shareLinkBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                            <path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/>
+                        </svg>
+                        Generate Link
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="listsModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Manage Lists</h2>
+                <button class="modal-close" id="listsClose">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="lists-content">
+                <div class="list-add-form">
+                    <input type="text" id="newListName" placeholder="New list name...">
+                    <button id="addListBtn">Add</button>
+                </div>
+                <ul class="lists-management" id="listsManagement"></ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="pomodoro-overlay" id="pomodoroOverlay">
+        <div class="modal-overlay"></div>
+        <div class="pomodoro-panel">
+            <div class="pomodoro-header">
+                <h3>Pomodoro Timer</h3>
+                <button id="pomodoroClose">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="pomodoro-display">
+                <div class="pomodoro-time" id="pomodoroTime">25:00</div>
+                <div class="pomodoro-status" id="pomodoroStatus">Ready</div>
+            </div>
+            <div class="pomodoro-controls">
+                <button class="pomodoro-btn primary" id="pomodoroStart">Start</button>
+                <button class="pomodoro-btn" id="pomodoroReset">Reset</button>
+            </div>
+            <div class="pomodoro-settings">
+                <label>Work: <input type="number" id="pomodoroWork" value="25" min="1" max="60"></label>
+                <label>Break: <input type="number" id="pomodoroBreak" value="5" min="1" max="30"></label>
+            </div>
+            <div class="pomodoro-sessions">
+                Sessions: <span id="pomodoroSessions">0</span>
+            </div>
+            <div class="pomodoro-direction">
+                <label class="pomodoro-direction-label">
+                    <input type="checkbox" id="pomodoroAscending">
+                    <span>Count up (ascending)</span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="share-modal" id="shareModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Share Task List</h2>
+                <button class="modal-close" id="shareClose">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="share-content">
+                <p>Your tasks have been encoded into a shareable link:</p>
+                <div class="share-link-box">
+                    <input type="text" id="shareLinkInput" readonly>
+                    <button id="copyShareLink">Copy</button>
+                </div>
+                <p class="share-note">Anyone with this link can view your tasks (read-only)</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">
+        <span class="toast-message"></span>
+        <button class="toast-undo" id="toastUndo">Undo</button>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
